@@ -97,3 +97,47 @@ func FuzzWrite(f *testing.F) {
 		}
 	})
 }
+
+func BenchmarkWrite(b *testing.B) {
+	var all testv1.All
+	f := gofuzz.New().Funcs(testv1fuzz.FuzzFuncs()...).Funcs(goprotofuzz.FuzzWKT[:]...)
+	f.Fuzz(&all)
+	w := jsoniter.ConfigDefault.BorrowStream(nil)
+	b.ReportAllocs()
+	b.ResetTimer()
+	b.Run("protojson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			_, _ = protojson.Marshal(&all)
+		}
+	})
+	b.Run("jsoniter", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			w.Reset(nil)
+			all.WriteJSON(w)
+			_ = w.Buffer()
+		}
+	})
+}
+
+func BenchmarkRead(b *testing.B) {
+	var all testv1.All
+	f := gofuzz.New().Funcs(testv1fuzz.FuzzFuncs()...).Funcs(goprotofuzz.FuzzWKT[:]...)
+	f.Fuzz(&all)
+	buffer, _ := protojson.Marshal(&all)
+	r := jsoniter.ConfigDefault.BorrowIterator(buffer)
+	b.ReportAllocs()
+	b.ResetTimer()
+	b.Run("protojson", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			all.Reset()
+			_ = protojson.Unmarshal(buffer, &all)
+		}
+	})
+	b.Run("jsoniter", func(b *testing.B) {
+		for i := 0; i < b.N; i++ {
+			r.Reset(nil)
+			all.Reset()
+			all.ReadJSON(r)
+		}
+	})
+}
