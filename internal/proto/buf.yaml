@@ -1,0 +1,8 @@
+version: v1
+name: buf.build/srikrsna/test
+breaking:
+  use:
+    - FILE
+lint:
+  use:
+    - DEFAULT

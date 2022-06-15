@@ -1,0 +1,15 @@
+version: v1
+managed:
+  enabled: true
+  go_package_prefix:
+    default: github.com/srikrsna/protojsoniter/internal/gen
+plugins:
+  - name: go
+    opt: paths=source_relative
+    out: ../gen
+  - name: gofuzz
+    opt: paths=source_relative
+    out: ../gen
+  - name: jsoniter
+    opt: paths=source_relative
+    out: ../gen
